@@ -1,6 +1,7 @@
 import express from 'express';
 import User from '../models/User.model';
 
+
 export const getAllUsers=async (req,res)=>{
     try{
         const AllUsers= await User.find().select('-password');
@@ -63,3 +64,4 @@ export const deleteUser = async(req,res)=>{
         res.status(500).json({message:"Error deleting User"});
     }
 }
+
