@@ -1,6 +1,6 @@
 import User from '../models/User.model.js';
 import jwt from 'jsonwebtoken';
-exports.register=async(req,res)=>{
+export const register=async(req,res)=>{
     // take data from body -> check if user exist (findOne by email) -> make variable and store all data -> save in db -> sign the token 
     try{
         const {name,email,password,role}=req.body;
@@ -11,15 +11,16 @@ exports.register=async(req,res)=>{
         await user.save();
 
         const token=jwt.sign({id:user._id},process.env.JWT_SECRET,{expiresIn:'24h'});
-        res.status(201).json({message:'User registered Successfully',token,user:{id:user._id,name:user.name,email:user.email,role:user.role}});
+        const data = { id: user._id, name: user.name, email: user.email, role: user.role };
+        res.status(201).json({ message: 'User registered Successfully', token, user: data });
     }
     catch(err)
     {
-        res.status(500).json({message:'Error registering user',error:error.message});
+        res.status(500).json({message:'Error registering user',error:err.message});
     }
 };
 
-exports.login= async(req,res)=>{
+export const login= async(req,res)=>{
     // take data from body -> check if user don't exist (findOne by email) -> compare the password -> sign the token 
     try{
         const {email,password}=req.body;
@@ -39,7 +40,7 @@ exports.login= async(req,res)=>{
     }
 }
 
-exports.getCurrentUser = async (req,res) =>{
+export const getCurrentUser = async (req,res) =>{
     try{
         const user= await User.findbyId(req.user.id).select('-password');
         res.json(user);

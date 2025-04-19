@@ -1,11 +1,12 @@
 import express from 'express';
-import { isMessManager, isStudent, isSuperAdmin, verifyToken } from '../middlewares/auth';
-import {getUsers, getUser,updateUser,deleteUser} from "../controller/user.controller";
+import {isSuperAdmin, verifyToken } from '../middlewares/auth.js';
+import {getAllUsers, getUser,updateUser,deleteUser} from "../controller/user.controller.js";
 const router= express.Router();
 
-router.get('/',verifyToken,isSuperAdmin,getUsers);
+router.get('/',verifyToken,isSuperAdmin,getAllUsers);
 
 router.get('/:id',verifyToken,getUser); 
 router.put('/:id',verifyToken,updateUser);
 router.delete('/:id',verifyToken,deleteUser);
 // router.put('/menu',verifyToken,)
+export default router;

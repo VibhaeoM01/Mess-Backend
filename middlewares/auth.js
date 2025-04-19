@@ -1,10 +1,10 @@
 // const jwt = require('jsonwebtoken');
 // const User = require('../models/User');
 import jwt from 'jsonwebtoken';
-import User from '../models/User.model';
+import User from '../models/User.model.js';
 export const verifyToken = async(req,res,next)=>{
     try{
-        const token =req.headers.authencation?.split(' ')[1];
+        const token =req.headers.authorization?.split(' ')[1];
         if(!token) return res.status(401).json({message:'No token provided'});
         const decoded=jwt.verify(token,process.env.JWT_SECRET);
         const user=await User.findbyID(decoded.id);

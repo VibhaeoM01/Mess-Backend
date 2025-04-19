@@ -1,7 +1,7 @@
-import User from "../models/User.model";
-import Feedback from "../models/Feedback.model"
-import Menu from "../models/Menu.model";
-import {getMealDateTime} from "../utils/timeUtils"
+// import User from "../models/User.model";
+import Feedback from "../models/Feedback.model.js"
+import Menu from "../models/Menu.model.js";
+import {getMealDateTime} from "../utils/timeUtils.js"
 export const submitFeedback= async(req,res)=>{
     try{
         const {mealType,willEat,comment}=req.body;

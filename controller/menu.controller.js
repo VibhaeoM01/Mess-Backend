@@ -1,4 +1,4 @@
-import Menu from '../models/Menu.model';
+import Menu from '../models/Menu.model.js';
 
 export const getTodaysMenu = async(req,res)=>{
     try{
