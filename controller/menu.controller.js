@@ -1,4 +1,4 @@
-import Menu from '../models/Menu.model.js';
+import Menu from "../models/menu.model.js";
 
 export const getTodaysMenu = async(req,res)=>{
     try{
@@ -53,8 +53,11 @@ export const UpdateMenu = async(req,res)=>{
 export const AddMenu= async(req,res)=>{
     try{
         const {mealType,items,image,day}= req.body;
-        const existing  = await Menu.find({day});
-        if(existing) return res.status(400).json({message:"Menu exist already"});
+        const existing = await Menu.findOne({ day, mealType });  // findOne returns obj and find return arr.. so while doing find... checking empty is checking length>0
+if (existing) {
+    return res.status(400).json({ message: "Menu already exists for this day and meal type" });
+}
+
 
         const newEntry= new Menu({
             mealType,items,image,day

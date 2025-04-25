@@ -1,6 +1,6 @@
 // import User from "../models/User.model";
 import Feedback from "../models/Feedback.model.js"
-import Menu from "../models/Menu.model.js";
+import Menu from "../models/menu.model.js";
 import {getMealDateTime} from "../utils/timeUtils.js"
 export const submitFeedback= async(req,res)=>{
     try{
