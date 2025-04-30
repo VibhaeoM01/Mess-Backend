@@ -4,14 +4,16 @@ import Menu from "../models/menu.model.js";
 import {getMealDateTime} from "../utils/timeUtils.js"
 export const submitFeedback= async(req,res)=>{
     try{
-        const {mealType,willEat,comment}=req.body;
+        const menuId = req.params.id; 
+        const {willEat,comment}=req.body;
         const studentId= req.user.id;
         const today = new Date().toLocaleString('en-US', { weekday: 'long' });
         
-        const menu=await Menu.findOne({day:today,mealType});
+        const menu = await Menu.findById(menuId);
         if(!menu) return res.status(404).json({message:"Meny not found for today"});
 
         const now = new Date();
+        const mealType=menu.mealType;
         const cuttofftime=getMealDateTime(mealType,-4);
         const commentOpentime=getMealDateTime(mealType,2);
 

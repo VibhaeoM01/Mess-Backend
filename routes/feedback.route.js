@@ -4,6 +4,6 @@ import { verifyToken, isStudent } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-router.post("/", verifyToken, isStudent, submitFeedback);
+router.post("/:id", verifyToken, isStudent, submitFeedback);
 
 export default router;

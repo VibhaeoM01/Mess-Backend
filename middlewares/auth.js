@@ -10,10 +10,10 @@ export const verifyToken = async (req, res, next) => {
     console.log("JWT_SECRET during verification:", process.env.JWT_SECRET);
     const decoded = jwt.verify(token, process.env.JWT_SECRET);  //foprkgv 
     console.log("Decoded Token:", decoded);
-    const user = await User.findById(decoded.id);
+    const decodedUser = await User.findById(decoded.id);
       
-    if (!user) return res.status(401).json({ message: "User not found" });
-    req.user = user;
+    if (!decodedUser) return res.status(401).json({ message: "User not found" });
+    req.user = decodedUser;
     next();
   } catch (err) {
  console.error("Error during token verification:", err.message);
@@ -32,10 +32,12 @@ export const isMessManager = (req, res, next) => {
   if (req.user.role != "mess_manager" && req.user.role != "super_admin") {
     return res.status(403).json({ message: "Student Access is restricted" });
   }
+  next();
 };
 
 export const isStudent = (req, res, next) => {
   if (req.user.role != "student" && req.user.role != "super_admin") {
     return res.status(403).json({ message: "Access denied" });
   }
+  next();
 };

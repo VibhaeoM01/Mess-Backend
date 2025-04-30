@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 
 const feedbackSchema = new mongoose.Schema({
+    meatType: {
+        type: String,
+        required: true,
+    },
     willEat: {
         type: Boolean,
         default: true,

@@ -16,7 +16,7 @@ export const getTodaysMenu = async(req,res)=>{
 
 export const getMenuChart = async(req,res)=>{
     try{
-        const menu=await menu.find();
+        const menu=await Menu.find();
         res.status(200).json(menu);
     }
     catch(err)
@@ -26,10 +26,13 @@ export const getMenuChart = async(req,res)=>{
     }
 }
 export const UpdateMenu = async(req,res)=>{
+    
     try{
-        const id = req.params;
+        const {id} = req.params;
         const {mealType,items,image,day}= req.body;
-
+        if (!mealType || !items || !day) {
+            return res.status(400).json({ message: 'Invalid request body' });
+          }
         const updated=await Menu.findByIdAndUpdate(
             id,
             {
@@ -38,10 +41,13 @@ export const UpdateMenu = async(req,res)=>{
                 image,
                 day
             },
+            {new:true}
         )
         if (!updated) {
             return res.status(404).json({ message: 'Menu not found' });
           }
+          
+          res.status(200).json({ message: 'Menu updated successfully', data: updated });
     }
     catch(err)
     {
@@ -52,18 +58,19 @@ export const UpdateMenu = async(req,res)=>{
 
 export const AddMenu= async(req,res)=>{
     try{
-        const {mealType,items,image,day}= req.body;
-        const existing = await Menu.findOne({ day, mealType });  // findOne returns obj and find return arr.. so while doing find... checking empty is checking length>0
-if (existing) {
-    return res.status(400).json({ message: "Menu already exists for this day and meal type" });
-}
+        // const {mealType,items,image,day}= req.body;
+        const menus= Array.isArray(req.body) ? req.body : [req.body];
 
-
-        const newEntry= new Menu({
-            mealType,items,image,day
-        });
-        const savedMenu=await newEntry.save();
-        res.status(201).json(savedMenu)
+        for(const {day,mealType} of menus)
+        {
+            const existing = await Menu.findOne({ day, mealType });  // findOne returns obj and find return arr.. so while doing find... checking empty is checking length>0
+            if (existing) {
+                return res.status(400).json({ message: "Menu already exists for this day and meal type" });
+            }
+            
+        }        
+        const saved = await Menu.insertMany(menus);
+        res.status(201).json({message:"Menus added successfully", data:saved})
 
     }
     catch(err)
