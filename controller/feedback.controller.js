@@ -40,3 +40,40 @@ export const submitFeedback= async(req,res)=>{
         res.status(500).json({ message: "Something went wrong" });
     }
 }
+export const getComments = async (req, res) => {
+    try {
+        const menuId = req.params.id;  
+ 
+        const comments = await Feedback.find({ menuId, comment: { $ne: null } }, "comment studentId")
+            .populate("studentId", "name email");  
+
+        if (!comments || comments.length === 0) {
+            return res.status(404).json({ message: "No comments found for this menu" });
+        }
+
+        res.status(200).json({ message: "Comments retrieved successfully", data: comments });
+    } catch (err) {
+        console.error("Error in getComments:", err.message);
+        res.status(500).json({ message: "Failed to retrieve comments", error: err.message });
+    }
+};
+
+export const getWillEatCounts = async (req, res) => {
+    try {
+        const menuId = req.params.id; // Extract menuId from the URL
+ 
+        const countWillEat = await Feedback.countDocuments({ menuId, willEat: true });
+        const countWillNotEat = await Feedback.countDocuments({ menuId, willEat: false });
+
+        res.status(200).json({
+            message: "Counts retrieved successfully",
+            data: {
+                willEat: countWillEat,
+                willNotEat: countWillNotEat,
+            },
+        });
+    } catch (err) {
+        console.error("Error in getWillEatCounts:", err.message);
+        res.status(500).json({ message: "Failed to retrieve counts", error: err.message });
+    }
+};
