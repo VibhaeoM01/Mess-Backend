@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const feedbackSchema = new mongoose.Schema({
-    meatType: {
+    mealType: {
         type: String,
         required: true,
     },
