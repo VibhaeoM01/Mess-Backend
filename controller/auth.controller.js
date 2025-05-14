@@ -52,12 +52,13 @@ export const login= async(req,res)=>{
 
 export const getCurrentUser = async (req,res) =>{
     try{
-        const user= await User.findbyId(req.user.id).select('-password');
+        const user= await User.findById(req.user.id).select('-password');
         res.json(user);
     }
     catch(err)
     {
-        res.status(500).json({message: 'Error fetching user', error: error.message});
+        console.log(err);
+        res.status(500).json({message: 'Error fetching user', error: err.message});
     }
 }
 
