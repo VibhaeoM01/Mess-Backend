@@ -1,18 +1,33 @@
 import Menu from "../models/menu.model.js";
+import { getMealDateTime } from "../utils/timeUtils.js";
 
-export const getTodaysMenu = async(req,res)=>{
-    try{
-        const todaysday= new Date().toLocaleString('en-US',{weekday:'long'});
-        const todaysMenu=await Menu.find({day:todaysday});
+export const getTodaysMenu = async (req, res) => {
+    try {
+        const mealTimeRanges = {
+            breakfast: "08:00 AM - 10:00 AM",
+            lunch: "12:00 PM - 02:00 PM",
+            snacks: "05:00 PM - 06:00 PM",
+            dinner: "08:00 PM - 09:00 PM"
+        };
 
-        res.status(200).json(todaysMenu);
-    }
-    catch(e)
-    {
+        const todaysday = new Date().toLocaleString('en-US', { weekday: 'long' });
+        const todaysMenu = await Menu.find({ day: todaysday });
+        const menusWithCutoff = todaysMenu.map(menu => {
+            const cutoffTime = getMealDateTime(menu.mealType, -4);
+            return {
+                ...menu.toObject(),
+                image: menu.image,
+                cutoffTime: cutoffTime,
+                time: mealTimeRanges[menu.mealType] || "N/A"
+            };
+        });
+
+        res.status(200).json(menusWithCutoff);
+    } catch (e) {
         console.log(e);
-        res.status(500).json({message:"Failed to fetch TodaysMenu"});
+        res.status(500).json({ message: "Failed to fetch TodaysMenu" });
     }
-}
+};
 
 export const getMenuChart = async(req,res)=>{
     try{
@@ -55,12 +70,19 @@ export const UpdateMenu = async(req,res)=>{
         res.status(500).json({message:'Failed to update menu'});
     }
 };
-
+export const deleteAllMenus = async (req, res) => {
+  try {
+    await Menu.deleteMany({});
+    res.status(200).json({ message: "All menus deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to delete menus", error: err });
+  }
+};
 export const AddMenu= async(req,res)=>{
     try{
         // const {mealType,items,image,day}= req.body;
         const menus= Array.isArray(req.body) ? req.body : [req.body];
-
+        
         for(const {day,mealType} of menus)
         {
             const existing = await Menu.findOne({ day, mealType });  // findOne returns obj and find return arr.. so while doing find... checking empty is checking length>0

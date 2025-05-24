@@ -1,11 +1,12 @@
-import express from "express";
+        import express from "express";
 import { isMessManager,isStudent,isSuperAdmin,verifyToken } from "../middlewares/auth.js" 
 
-import {getMenuChart, getTodaysMenu,UpdateMenu,AddMenu} from "../controller/menu.controller.js";
+import {getMenuChart, getTodaysMenu,UpdateMenu,AddMenu, deleteAllMenus} from "../controller/menu.controller.js";
 const router=express.Router();
 
-router.get('/all',verifyToken,getMenuChart)
-router.get('/',verifyToken,isStudent,getTodaysMenu);
-router.post('/add',verifyToken,isSuperAdmin,AddMenu);
+router.get('/all',verifyToken,isMessManager,getMenuChart)
+router.get('/',getTodaysMenu);
+router.post('/add',verifyToken,isSuperAdmin,isMessManager,AddMenu);
+router.delete('/all', verifyToken, isSuperAdmin,isMessManager, deleteAllMenus);
 router.put('/update/:id',verifyToken,isMessManager,UpdateMenu);
 export default router;
