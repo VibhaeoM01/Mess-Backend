@@ -2,42 +2,7 @@ import User from "../models/User.model.js";
 import jwt from "jsonwebtoken";
 
 import MealCount from "../models/MenuCount.js"; // adjust path if needed
-// export const register = async (req, res) => {
-//   // console.log('JWT_SECRET during signing:', process.env.JWT_SECRET);
-//   // console.log('JWT_SECRET length during signing:', process.env.JWT_SECRET?.length);
-
-//   // take data from body -> check if user exist (findOne by email) -> make variable and store all data -> save in db -> sign the token
-//   try {
-//     const { name, email, password, role } = req.body;
-//     const existingUser = await User.findOne({ email });
-//     if (existingUser)
-//       return res.status(400).json({ message: "User Already Exist" });
-//     const user = new User({ name, email, password, role: role || "student" });
-
-//     await user.save();
-//     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-//       algorithm: "HS256",
-//       expiresIn: "24h",
-//     });
-//     // const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
-
-//     const data = {
-//       id: user._id,
-//       name: user.name,
-//       email: user.email,
-//       role: user.role,
-//     };
-
-//     await MealCount.updateMany({}, { $inc: { count: 1 } });
-//     res
-//       .status(201)
-//       .json({ message: "User registered Successfully", token, user: data });
-//   } catch (err) {
-//     res
-//       .status(500)
-//       .json({ message: "Error registering user", error: err.message });
-//   }
-// };
+ 
 
 export const register = async (req, res) => {
   try {
