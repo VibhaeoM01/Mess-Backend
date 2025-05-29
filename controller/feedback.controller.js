@@ -1,5 +1,5 @@
 // import User from "../models/User.model";
-import Feedback from "../models/feedback.model.js";
+import Feedback from "../models/Feedback.model.js";
 import Menu from "../models/menu.model.js";
 import { getMealDateTime } from "../utils/timeUtils.js";
 import MealCount from "../models/MenuCount.js"; 
