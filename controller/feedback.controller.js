@@ -1,5 +1,5 @@
 // import User from "../models/User.model";
-import Feedback from "../models/Feedback.model.js";
+import Feedback from "../models/feedback.model.js";
 import Menu from "../models/menu.model.js";
 import { getMealDateTime } from "../utils/timeUtils.js";
 import MealCount from "../models/MenuCount.js"; 
@@ -145,17 +145,15 @@ export const submitWillEat = async (req, res) => {
 };
 export const getComments = async (req, res) => {
   try {
-    const menuId = req.params.id;
-
     const comments = await Feedback.find(
-      { menuId, comment: { $ne: null } },
+      { comment: { $ne: null } }, // Only feedbacks with a comment
       "comment studentId"
-    ).populate("studentId", "name email");
+    ).populate("studentId", "name email"); // Populate student name and email
 
     if (!comments || comments.length === 0) {
       return res
         .status(404)
-        .json({ message: "No comments found for this menu" });
+        .json({ message: "No comments found" });
     }
 
     res

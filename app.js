@@ -30,8 +30,8 @@ app.use("/api/feedbacks", feedbackRoutes);
 app.use("/api/contact",contactRoutes);
 // app.use("/api/payments",);
 
-// app.listen(5000, () => {
-//     console.log('Server is running');
-// });
+app.listen(5000, () => {
+    console.log('Server is running');
+});
 
 export default app;
