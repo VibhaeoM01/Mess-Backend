@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post("/:id", verifyToken, isStudent, submitcomment);
 router.post("/eat/:id", verifyToken, isStudent, submitWillEat);
-router.get('/feedback',verifyToken,getComments);
+router.get('/feedback',getComments);
 // router.get('/feedback',verifyToken, isMessManager, getWillEatCounts);
 router.get('/count',verifyToken,isMessManager,getTodayAllMealCounts)
 

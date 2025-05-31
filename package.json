@@ -1,5 +1,8 @@
 {
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
@@ -12,6 +15,8 @@
     "stripe": "^18.1.1"
   },
   "scripts": {
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "start": "node app.js",
+    "build": "npm rebuild bcrypt --build-from-source"
   }
 }
