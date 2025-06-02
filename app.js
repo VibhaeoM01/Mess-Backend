@@ -11,7 +11,8 @@ dotenv.config();
 const app = express();
  
 app.use(cors({
-    origin: 'http://localhost:3000',  
+    // origin: 'http://localhost:3000',  // Local development URL
+    origin: ['http://localhost:3000', 'https://mess-frontend-omega.vercel.app/'],  // Allow both local and deployed frontend
     credentials: true, 
 }));
 
@@ -30,7 +31,11 @@ app.use("/api/feedbacks", feedbackRoutes);
 app.use("/api/contact",contactRoutes);
 // app.use("/api/payments",);
 
-app.listen(5000, () => {
+app.get("/", (req, res) => {
+  res.send("API is running!");
+});
+
+app.listen(process.env.PORT || 5000, () => {  // Use environment PORT or fallback to 5000
     console.log('Server is running');
 });
 
