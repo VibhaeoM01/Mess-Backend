@@ -70,6 +70,7 @@ export const UpdateMenu = async(req,res)=>{
         res.status(500).json({message:'Failed to update menu'});
     }
 };
+
 export const deleteAllMenus = async (req, res) => {
   try {
     await Menu.deleteMany({});
@@ -81,7 +82,7 @@ export const deleteAllMenus = async (req, res) => {
 export const AddMenu= async(req,res)=>{
     try{
         // const {mealType,items,image,day}= req.body;
-        const menus= Array.isArray(req.body) ? req.body : [req.body];
+        const menus= Array.isArray(req.body) ? req.body : [req.body];   //adding 1 menu is not array so we will have to make it, adding multiple menus will already be a array...
         
         for(const {day,mealType} of menus)
         {

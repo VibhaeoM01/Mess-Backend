@@ -2,8 +2,31 @@ import User from "../models/User.model.js";
 import jwt from "jsonwebtoken";
 
 import MealCount from "../models/MenuCount.js"; // adjust path if needed
- 
 
+export const deleteCurrentAccount = async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.user.id); // its suggested to use req.user.id , which has info to currently logged in user.. to avoid deleting  other user by mistake
+    res.status(200).json({ message: "Account deleted Succesfully" });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Failed to delete account", error: err.message });
+  }
+};
+export const UpdatedAccount = async (req, res) => {
+  try {
+    const { email, name } = req.body;
+    const updatesUser = await User.findByIdAndUpdate(
+      req.user.id,
+      { email, name },
+      { new: true }
+    );
+    res.status(200).json({ message: "Account Details Updated" });
+  } catch (err) {
+    res.status(500).json({message:"Failed to Update the user"});
+    console.log(err);
+  }
+};
 export const register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -27,8 +50,16 @@ export const register = async (req, res) => {
 
     // Increment meal counts only if the user is a student
     if (user.role === "student") {
-      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-      const meals = ['breakfast', 'lunch', 'snacks', 'dinner'];
+      const days = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      const meals = ["breakfast", "lunch", "snacks", "dinner"];
       for (const day of days) {
         for (const mealType of meals) {
           await MealCount.findOneAndUpdate(
@@ -86,7 +117,7 @@ export const login = async (req, res) => {
 
 export const getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
+    const user = await User.findById(req.user.id).select("-password"); //req.user.id is from verifytoken middleware, where it decodes and verify JWT token from header and fetchs the user from DB using decoded ID and attach the user objecty to req.user
     res.json(user);
   } catch (err) {
     console.log(err);
@@ -96,6 +127,7 @@ export const getCurrentUser = async (req, res) => {
   }
 };
 
+//for logout , clearcookie(token)
 export const logout = async (req, res) => {
   res.clearCookie("token").status(200).json({ message: "Logout Successful" });
 };

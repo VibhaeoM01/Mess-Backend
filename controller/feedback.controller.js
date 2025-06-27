@@ -2,13 +2,91 @@
 import Feedback from "../models/feedback.model.js";
 import Menu from "../models/menu.model.js";
 import { getMealDateTime } from "../utils/timeUtils.js";
-import MealCount from "../models/MenuCount.js"; 
-import User from "../models/User.model.js";  
+import MealCount from "../models/MenuCount.js";
+import User from "../models/User.model.js";
+import Sentiment from "sentiment";
+const sentiment = new Sentiment();
+
+
+export const getSentimentTrends = async (req, res) => {
+  try {
+    // Group by date and sentiment
+    const trends = await Feedback.aggregate([
+      {
+        $match: { sentiment: { $in: ["positive", "neutral", "negative"] } }
+      },
+      {
+        $group: {
+          _id: {
+            date: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
+            sentiment: "$sentiment"
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id.date",
+          sentiments: {
+            $push: { sentiment: "$_id.sentiment", count: "$count" }
+          }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+    res.json({ data: trends });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to get sentiment trends", error: err.message });
+  }
+};
+
 
 export const submitcomment = async (req, res) => {
   try {
     const menuId = req.params.id;
     const { comment } = req.body;
+    const sentimentOptions = {
+      extras: {
+        bad: -5,
+        terrible: -10,
+        awful: -8,
+        horrible: -7,
+        disgusting: -6,
+        bland: -3,
+        cold: -2,
+        stale: -4,
+        undercooked: -5,
+        overcooked: -4,
+        unhygienic: -7,
+        dirty: -6,
+        rude: -3,
+        slow: -2,
+        late: -2,
+        good: 3,
+        tasty: 4,
+        delicious: 5,
+        amazing: 6,
+        excellent: 7,
+        fresh: 3,
+        hot: 2,
+        clean: 2,
+        friendly: 2,
+        quick: 2,
+        prompt: 2,
+        satisfied: 3,
+        unsatisfied: -3,
+        disappointed: -4,
+        happy: 3,
+        unhappy: -3,
+        // Add more as needed for your context
+      },
+    };
+
+    const result = sentiment.analyze(comment,sentimentOptions);
+    let sentimentLabel = "neutral";
+    if (result.score > 0) sentimentLabel = "positive";
+    else if (result.score < 0) sentimentLabel = "negative";
+
     const studentId = req.user.id;
     const today = new Date().toLocaleString("en-US", { weekday: "long" });
 
@@ -31,15 +109,16 @@ export const submitcomment = async (req, res) => {
         .json({ message: "Duplicate comment. Feedback already exists." });
     }
 
-    let feedback = await Feedback.findOne({ studentId, menuId: menu._id });
-    if (!feedback)
-      feedback = new Feedback({
+    // let feedback = await Feedback.findOne({ studentId, menuId: menu._id });
+    // if (!feedback) {
+      let feedback = new Feedback({
         studentId,
         menuId: menu._id,
         comment,
         mealType,
+        sentiment: sentimentLabel,
       });
-
+    
     if (now < commentOpentime)
       return res.status(403).json({ message: "Commenting not open yet" });
     feedback.commentOpentime = commentOpentime;
@@ -91,7 +170,7 @@ export const submitcomment = async (req, res) => {
 //       });
 //   }
 // };
- 
+
 export const submitWillEat = async (req, res) => {
   try {
     const menuId = req.params.id;
@@ -135,12 +214,10 @@ export const submitWillEat = async (req, res) => {
       .json({ message: "WillEat preference saved successfully", feedback });
   } catch (err) {
     console.error("Error in submitWillEat:", err.message);
-    res
-      .status(500)
-      .json({
-        message: "Failed to save willEat preference",
-        error: err.message,
-      });
+    res.status(500).json({
+      message: "Failed to save willEat preference",
+      error: err.message,
+    });
   }
 };
 export const getComments = async (req, res) => {
@@ -151,9 +228,7 @@ export const getComments = async (req, res) => {
     ).populate("studentId", "name email"); // Populate student name and email
 
     if (!comments || comments.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No comments found" });
+      return res.status(404).json({ message: "No comments found" });
     }
 
     res
@@ -195,7 +270,6 @@ export const getComments = async (req, res) => {
 //   }
 // };
 
-
 // export const getTodayAllMealCounts = async (req, res) => {
 //   try {
 //     const today = new Date().toLocaleString("en-US", { weekday: "long" });
@@ -227,11 +301,10 @@ export const getComments = async (req, res) => {
 //   }
 // };
 
-
 export const getTodayAllMealCounts = async (req, res) => {
   try {
     const today = new Date().toLocaleString("en-US", { weekday: "long" });
-    const meals = ['breakfast', 'lunch', 'snacks', 'dinner'];
+    const meals = ["breakfast", "lunch", "snacks", "dinner"];
 
     // Get total number of students
     const totalStudents = await User.countDocuments({ role: "student" });
@@ -242,9 +315,12 @@ export const getTodayAllMealCounts = async (req, res) => {
     const result = {};
 
     for (const meal of meals) {
-      const menu = menus.find(m => m.mealType === meal);
+      const menu = menus.find((m) => m.mealType === meal);
       if (menu) {
-        const willNotEat = await Feedback.countDocuments({ menuId: menu._id, willEat: false });
+        const willNotEat = await Feedback.countDocuments({
+          menuId: menu._id,
+          willEat: false,
+        });
         const willEat = totalStudents - willNotEat;
         result[meal] = { willEat, willNotEat };
       } else {
@@ -258,6 +334,26 @@ export const getTodayAllMealCounts = async (req, res) => {
     });
   } catch (err) {
     console.error("Error in getTodayAllMealCounts:", err.message);
-    res.status(500).json({ message: "Failed to retrieve today's meal counts", error: err.message });
+    res
+      .status(500)
+      .json({
+        message: "Failed to retrieve today's meal counts",
+        error: err.message,
+      });
+  }
+};
+
+// Get willEat status for a student for a menu
+export const getWillEatStatus = async (req, res) => {
+  try {
+    const menuId = req.params.id;
+    const studentId = req.user.id;
+    const feedback = await Feedback.findOne({ studentId, menuId });
+    if (!feedback) {
+      return res.status(200).json({ willEat: null });
+    }
+    res.status(200).json({ willEat: feedback.willEat });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to get willEat status" });
   }
 };
