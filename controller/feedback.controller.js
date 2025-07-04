@@ -183,7 +183,7 @@ export const submitWillEat = async (req, res) => {
 
     const now = new Date();
     const mealType = menu.mealType;
-    const cutoffTime = getMealDateTime(mealType, -4); // Cutoff time for willEat (-4 hours)
+    const cutoffTime = getMealDateTime(mealType, -2); // Cutoff time for willEat (-2 hours)
 
     if (now > cutoffTime) {
       return res
@@ -195,18 +195,40 @@ export const submitWillEat = async (req, res) => {
     let feedback = await Feedback.findOne({ studentId, menuId });
     const previousWillEat = feedback ? feedback.willEat : null;
 
-    if (!feedback) feedback = new Feedback({ studentId, menuId, mealType });
+    // *** NEW FEATURE: Check if this is a new day - if feedback exists but was created on a different day ***
+    const today = new Date().toDateString();
+    const isNewDay = feedback ? new Date(feedback.createdAt).toDateString() !== today : true;
 
-    feedback.willEat = willEat;
-    await feedback.save();
-
-    // Only update MealCount if the choice has changed
-    if (previousWillEat !== willEat) {
+    if (!feedback) {
+      feedback = new Feedback({ studentId, menuId, mealType });
+    } 
+    // *** NEW FEATURE: Reset to default (true) for new day ***
+    else if (isNewDay) { 
+      feedback.willEat = true;
+      feedback.createdAt = new Date();
+      await feedback.save();
+       
       await MealCount.findOneAndUpdate(
         { day: menu.day, mealType: menu.mealType },
-        { $inc: { count: willEat ? 1 : previousWillEat === false ? 1 : -1 } }, // +1 if switched to Yes, -1 if switched to No
+        { $inc: { count: previousWillEat === false ? 1 : 0 } }, // +1 if was previously No, now reset to Yes
         { upsert: true }
       );
+    }
+
+    // *** NEW FEATURE: Only proceed with choice update if not a new day reset ***
+    if (!isNewDay || feedback.willEat !== willEat) {
+      const oldChoice = feedback.willEat;
+      feedback.willEat = willEat;
+      await feedback.save();
+
+      // Update MealCount if the choice has changed
+      if (oldChoice !== willEat) {
+        await MealCount.findOneAndUpdate(
+          { day: menu.day, mealType: menu.mealType },
+          { $inc: { count: willEat ? 1 : -1 } }, // +1 if Yes, -1 if No
+          { upsert: true }
+        );
+      }
     }
 
     res
@@ -343,15 +365,55 @@ export const getTodayAllMealCounts = async (req, res) => {
   }
 };
 
-// Get willEat status for a student for a menu
+// OLD VERSION - COMMENTED OUT
+// export const getWillEatStatus = async (req, res) => {
+//   try {
+//     const menuId = req.params.id;
+//     const studentId = req.user.id;
+//     const feedback = await Feedback.findOne({ studentId, menuId });
+//     if (!feedback) {
+//       return res.status(200).json({ willEat: null });
+//     }
+//     res.status(200).json({ willEat: feedback.willEat });
+//   } catch (err) {
+//     res.status(500).json({ message: "Failed to get willEat status" });
+//   }
+// };
+
+// NEW VERSION WITH DAILY RESET - Get willEat status for a student for a menu
 export const getWillEatStatus = async (req, res) => {
   try {
     const menuId = req.params.id;
     const studentId = req.user.id;
     const feedback = await Feedback.findOne({ studentId, menuId });
+    
     if (!feedback) {
-      return res.status(200).json({ willEat: null });
+      return res.status(200).json({ willEat: true }); // *** NEW FEATURE: Default to true for new entries ***
     }
+
+    // *** NEW FEATURE: Check if this is a new day - if feedback exists but was created on a different day ***
+    const today = new Date().toDateString();
+    const isNewDay = new Date(feedback.createdAt).toDateString() !== today;
+
+    if (isNewDay) {
+      // *** NEW FEATURE: Reset to default (true) for new day ***
+      feedback.willEat = true;
+      feedback.createdAt = new Date();
+      await feedback.save();
+      
+      // Update MealCount for the reset if previous choice was false
+      if (feedback.willEat !== true) {
+        const menu = await Menu.findById(menuId);
+        if (menu) {
+          await MealCount.findOneAndUpdate(
+            { day: menu.day, mealType: menu.mealType },
+            { $inc: { count: 1 } }, // +1 since we're resetting to Yes
+            { upsert: true }
+          );
+        }
+      }
+    }
+
     res.status(200).json({ willEat: feedback.willEat });
   } catch (err) {
     res.status(500).json({ message: "Failed to get willEat status" });
