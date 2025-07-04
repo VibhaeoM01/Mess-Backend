@@ -15,7 +15,16 @@ const app = express();
 app.use(cors({
     // origin: 'http://localhost:3000',  // Local development URL
     origin: ['http://localhost:5173', 'https://mess-frontend-omega.vercel.app/'],  // Allow both local and deployed frontend
-    credentials: true, 
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'X-Requested-With',
+        'Accept',
+        'Origin',
+        'Cookie' 
+    ],
 }));
 
 app.use(express.json());
