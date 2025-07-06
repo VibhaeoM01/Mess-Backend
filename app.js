@@ -14,7 +14,11 @@ const app = express();
  
 app.use(cors({
     // origin: 'http://localhost:3000',  // Local development URL
-    origin: ['http://localhost:5173', 'https://mess-frontend-omega.vercel.app/'],  // Allow both local and deployed frontend
+    origin: [
+        'http://localhost:5173', 
+        'https://mess-frontend-omega.vercel.app',  // Removed trailing slash
+        'https://mess-frontend-omega.vercel.app/'  // Added both with and without trailing slash
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
@@ -25,6 +29,8 @@ app.use(cors({
         'Origin',
         'Cookie' 
     ],
+    optionsSuccessStatus: 200, // Some legacy browsers choke on 204
+    preflightContinue: false,
 }));
 
 app.use(express.json());
